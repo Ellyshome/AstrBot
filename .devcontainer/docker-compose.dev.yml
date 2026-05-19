@@ -1,0 +1,17 @@
+services:
+  astrbot:
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+    container_name: astrbot-dev
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      - TZ=Asia/Shanghai
+    volumes:
+      - ..:/AstrBot:cached
+      - ../data:/AstrBot/data
+    ports:
+      - "6185:6185"
+      - "6199:6199"
+    command: sleep infinity
