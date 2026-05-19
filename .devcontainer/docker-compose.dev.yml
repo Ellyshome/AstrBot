@@ -8,6 +8,8 @@ services:
       - no-new-privileges:true
     environment:
       - TZ=Asia/Shanghai
+      - PIP_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple
+      - UV_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple
     volumes:
       - ..:/AstrBot:cached
       - ../data:/AstrBot/data

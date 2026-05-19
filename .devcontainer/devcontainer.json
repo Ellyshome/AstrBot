@@ -35,6 +35,6 @@
       }
     }
   },
-  "postCreateCommand": "git config --global --add safe.directory /AstrBot",
+  "postCreateCommand": "git config --global --add safe.directory /AstrBot && pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple",
   "remoteUser": "root"
 }
