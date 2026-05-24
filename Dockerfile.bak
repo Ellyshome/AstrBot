@@ -3,14 +3,7 @@ WORKDIR /AstrBot
 
 COPY . /AstrBot/
 
-ARG HTTP_PROXY
-ARG HTTPS_PROXY
-
-RUN if [ -n "$HTTP_PROXY" ]; then \
-        echo "Acquire::http::Proxy \"$HTTP_PROXY\";" > /etc/apt/apt.conf.d/99proxy; \
-        echo "Acquire::https::Proxy \"$HTTPS_PROXY\";" >> /etc/apt/apt.conf.d/99proxy; \
-    fi \
-    && apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     build-essential \
     python3-dev \
@@ -34,5 +27,6 @@ RUN python -m pip install uv \
     && uv pip install socksio uv pilk --no-cache-dir --system
 
 EXPOSE 6185
+
+# 保持容器运行，方便 docker exec 进入调试
 CMD ["tail", "-f", "/dev/null"]
-# CMD ["python", "main.py"]
