@@ -3,7 +3,14 @@ WORKDIR /AstrBot
 
 COPY . /AstrBot/
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
+ARG HTTP_PROXY
+ARG HTTPS_PROXY
+
+RUN if [ -n "$HTTP_PROXY" ]; then \
+        echo "Acquire::http::Proxy \"$HTTP_PROXY\";" > /etc/apt/apt.conf.d/99proxy; \
+        echo "Acquire::https::Proxy \"$HTTPS_PROXY\";" >> /etc/apt/apt.conf.d/99proxy; \
+    fi \
+    && apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     build-essential \
     python3-dev \
@@ -23,12 +30,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 RUN python -m pip install uv \
-    && echo "3.12" > .python-version \
-    && uv lock \
-    && uv export --format requirements.txt --output-file requirements.txt --frozen \
     && uv pip install -r requirements.txt --no-cache-dir --system \
     && uv pip install socksio uv pilk --no-cache-dir --system
 
 EXPOSE 6185
-
-CMD ["python", "main.py"]
+CMD ["tail", "-f", "/dev/null"]
+# CMD ["python", "main.py"]
