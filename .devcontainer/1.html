@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>可编辑与实时保存的景观分析幻灯片</title>
+    <!-- 引入 Tailwind CSS 用于快速美化排版 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 强制幻灯片保持 16:9 的专业黄金比例 */
+        .slide-aspect {
+            aspect-ratio: 16 / 9;
+        }
+        /* 定义可编辑区域的微光提示样式 */
+        [contenteditable="true"] {
+            outline: none;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        [contenteditable="true"]:hover {
+            background-color: rgba(16, 185, 129, 0.08);
+            border-radius: 4px;
+            box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.3);
+        }
+        [contenteditable="true"]:focus {
+            background-color: rgba(16, 185, 129, 0.15);
+            border-radius: 4px;
+            box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.6);
+        }
+        /* 拖拽时的手势和过渡样式 */
+        .draggable {
+            cursor: grab;
+            user-select: none;
+            touch-action: none;
+        }
+        .draggable:active {
+            cursor: grabbing;
+            scale: 1.02;
+        }
+    </style>
+</head>
+<body class="bg-gray-950 flex flex-col items-center justify-center min-h-screen text-gray-100 p-4 font-sans select-none">
+
+    <!-- 顶部控制面板：展示自动保存状态与复位按钮 -->
+    <div class="w-full max-w-5xl mb-3 flex justify-between items-center bg-slate-900/80 border border-slate-800 rounded-xl px-4 py-2.5 shadow-lg">
+        <div class="flex items-center gap-2">
+            <span class="flex h-2.5 w-2.5 relative">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+            </span>
+            <span id="save-status" class="text-xs text-slate-400 font-mono">状态: 所有修改已实时保存在本地</span>
+        </div>
+        <button id="reset-btn" class="text-xs bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg px-3 py-1.5 transition-all font-semibold active:scale-95">
+            重置页面至默认值
+        </button>
+    </div>
+
+    <!-- 幻灯片主容器 -->
+    <div id="slide-container" class="slide-aspect w-full max-w-5xl bg-slate-950 border border-slate-800 rounded-2xl shadow-2xl flex flex-col justify-between p-8 relative overflow-hidden">
+        
+        <!-- 背景装饰微光 -->
+        <div class="absolute -top-40 -left-40 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl"></div>
+        <div class="absolute -bottom-40 -right-40 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl"></div>
+
+        <!-- 1. 页眉 (Header) -->
+        <div class="flex justify-between items-start z-10">
+            <div>
+                <span data-save-key="header-tag" contenteditable="true" class="text-xs font-bold tracking-widest text-emerald-400 uppercase">Landscape Space Concept</span>
+                <h1 data-save-key="header-title" contenteditable="true" class="text-3xl font-extrabold tracking-tight mt-1 bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
+                    空间定位分析：三维“天地墙”架构
+                </h1>
+            </div>
+            <div data-save-key="header-page" contenteditable="true" class="text-right text-xs text-slate-500 font-mono">
+                [SECTION 01 / PAGE 01]
+            </div>
+        </div>
+
+        <!-- 2. 核心内容区 (Grid Layout) -->
+        <div class="grid grid-cols-12 gap-8 items-center my-auto z-10">
+            
+            <!-- 左侧：概念阐述 (5格) -->
+            <div class="col-span-5 space-y-4 pr-4">
+                <p data-save-key="concept-desc" contenteditable="true" class="text-slate-400 text-sm leading-relaxed mb-1">
+                    点击下方任意文本即可直接编辑，文字修改将被瞬间自动存入本地浏览器。右侧的标注与圈圈均可拖拽。
+                </p>
+                
+                <!-- 概念列表 -->
+                <div class="space-y-3">
+                    <div class="flex items-start gap-3">
+                        <div class="w-5 h-5 rounded bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xs font-bold mt-0.5 select-none">天</div>
+                        <div>
+                            <h4 data-save-key="roof-title" contenteditable="true" class="text-sm font-semibold text-slate-200">顶界面 (Roofing)</h4>
+                            <p data-save-key="roof-desc" contenteditable="true" class="text-xs text-slate-400 mt-0.5">植物、廊架、遮蔽物界定上部边界。</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <div class="w-5 h-5 rounded bg-blue-500/20 text-blue-400 flex items-center justify-center text-xs font-bold mt-0.5 select-none">地</div>
+                        <div>
+                            <h4 data-save-key="ground-title" contenteditable="true" class="text-sm font-semibold text-slate-200">底界面 (Ground)</h4>
+                            <p data-save-key="ground-desc" contenteditable="true" class="text-xs text-slate-400 mt-0.5">高差、材质切换引导人体行进视线与动线。</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <div class="w-5 h-5 rounded bg-amber-500/20 text-amber-400 flex items-center justify-center text-xs font-bold mt-0.5 select-none">墙</div>
+                        <div>
+                            <h4 data-save-key="wall-title" contenteditable="true" class="text-sm font-semibold text-slate-200">侧界面 (Wall)</h4>
+                            <p data-save-key="wall-desc" contenteditable="true" class="text-xs text-slate-400 mt-0.5">景墙或植物篱，创造视线的渗透或隔断效果。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧：设计示意图及可拖动标注图层 (7格) -->
+            <div id="diagram-container" class="col-span-7 bg-slate-900/40 border border-slate-800/80 rounded-xl p-6 relative aspect-[4/3] flex items-center justify-center overflow-hidden">
+                
+                <!-- 剖面背景 SVG -->
+                <svg class="w-full h-full text-slate-700 pointer-events-none select-none" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <!-- 地面剖面 -->
+                    <path d="M 20 250 L 180 250 L 220 220 L 380 220" stroke="currentColor" stroke-width="2" stroke-dasharray="4 4" />
+                    <!-- 竖向景墙 -->
+                    <rect x="250" y="100" width="12" height="120" rx="2" fill="#334155" />
+                    <!-- 顶部盖板 -->
+                    <path d="M 50 80 Q 150 40 250 80" stroke="currentColor" stroke-width="2" />
+                    <line x1="150" y1="60" x2="150" y2="250" stroke="#1e293b" stroke-width="1" />
+                    
+                    <text x="30" y="275" fill="#475569" font-size="10" font-family="monospace">GROUND LEVEL</text>
+                    <text x="290" y="95" fill="#475569" font-size="10" font-family="monospace">FEATURE WALL</text>
+                </svg>
+
+                <!-- ==================== 交互性黑科技：动态引线 SVG 图层 ==================== -->
+                <!-- 这个 SVG 负责在两个可拖拽 DIV 之间动态绘制折线引线 -->
+                <svg id="dynamic-connector" class="absolute inset-0 w-full h-full pointer-events-none z-20">
+                    <path id="leader-line" d="" stroke="#fbbf24" stroke-width="1.5" fill="none" stroke-dasharray="2 2" />
+                    <circle id="leader-start-dot" cx="0" cy="0" r="3.5" fill="#fbbf24" />
+                </svg>
+
+                <!-- 1. 可拖拽元素：虚线对焦圆圈 (对应分析节点位置) -->
+                <div id="drag-ring" class="draggable absolute z-30 flex items-center justify-center" 
+                     style="top: 60%; left: 52%; width: 50px; height: 50px; transform: translate(-50%, -50%);">
+                    <!-- 闪烁动画外圈 -->
+                    <div class="absolute inset-0 border-2 border-dashed border-amber-400 rounded-full animate-[pulse_2s_infinite]"></div>
+                    <div class="w-2.5 h-2.5 bg-amber-400 rounded-full"></div>
+                </div>
+
+                <!-- 2. 可拖拽元素：标注说明卡片 -->
+                <div id="drag-card" class="draggable absolute z-30 bg-slate-950/95 border border-amber-500/30 rounded-lg p-3 shadow-2xl" 
+                     style="top: 25%; left: 8%; width: 155px;">
+                    <!-- 提示抓取标志 -->
+                    <div class="w-8 h-1 bg-slate-800 rounded-full mx-auto mb-2 pointer-events-none"></div>
+                    <h5 data-save-key="card-header" contenteditable="true" class="text-[10px] font-bold text-amber-400 uppercase tracking-wider">Node Details</h5>
+                    <p data-save-key="card-title" contenteditable="true" class="text-xs text-slate-200 mt-0.5 font-semibold">过渡灰空间节点</p>
+                    <p data-save-key="card-desc" contenteditable="true" class="text-[9px] text-slate-400 leading-tight mt-1">
+                        材质高差与竖向立面景墙在此处咬合，引导视觉动线。
+                    </p>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- 3. 页脚 (Footer) -->
+        <div class="flex justify-between items-center text-[10px] text-slate-600 border-t border-slate-900 pt-4 z-10 select-none">
+            <div data-save-key="footer-copyright" contenteditable="true">© 2026 LANDSCAPE LAB. ALL RIGHTS RESERVED.</div>
+            <div class="flex gap-4">
+                <span data-save-key="footer-confidential" contenteditable="true">CONFIDENTIAL</span>
+                <span data-save-key="footer-version" contenteditable="true">DRAFT V1.0</span>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 客户端核心交互逻辑脚本 -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const container = document.getElementById('diagram-container');
+            const ring = document.getElementById('drag-ring');
+            const card = document.getElementById('drag-card');
+            const line = document.getElementById('leader-line');
+            const dot = document.getElementById('leader-start-dot');
+            const saveStatusText = document.getElementById('save-status');
+
+            // --- 1. 双位置实时折线自动绘制逻辑 ---
+            function updateLeaderLine() {
+                const containerRect = container.getBoundingClientRect();
+                const ringRect = ring.getBoundingClientRect();
+                const cardRect = card.getBoundingClientRect();
+
+                // 获取圆圈的绝对中心点
+                const ringX = (ringRect.left + ringRect.width / 2) - containerRect.left;
+                const ringY = (ringRect.top + ringRect.height / 2) - containerRect.top;
+
+                // 判断卡片在圆圈的左侧还是右侧，来决定连接卡片的哪一边
+                const cardLeft = cardRect.left - containerRect.left;
+                const cardWidth = cardRect.width;
+                const cardHeight = cardRect.height;
+                const cardYCenter = (cardRect.top + cardHeight / 2) - containerRect.top;
+
+                let cardAttachX, cardAttachY;
+
+                if (cardLeft + cardWidth / 2 < ringX) {
+                    // 卡片在圆圈左边 -> 连接卡片的右边边缘
+                    cardAttachX = cardLeft + cardWidth;
+                    cardAttachY = cardYCenter;
+                } else {
+                    // 卡片在圆圈右边 -> 连接卡片的左边边缘
+                    cardAttachX = cardLeft;
+                    cardAttachY = cardYCenter;
+                }
+
+                // 绘制经典的折角引线：从圈心(Start)出发，横向走一小段再拐弯到卡片
+                // 折弯点 (Knee point)
+                const kneeX = cardAttachX + (ringX - cardAttachX) * 0.45;
+                const kneeY = cardAttachY;
+
+                // 更新 SVG Path 和圈心发光的小圆点位置
+                line.setAttribute('d', `M ${ringX} ${ringY} L ${kneeX} ${kneeY} L ${cardAttachX} ${cardAttachY}`);
+                dot.setAttribute('cx', ringX);
+                dot.setAttribute('cy', ringY);
+            }
+
+            // 监听大小缩放和初始化时重绘折线
+            window.addEventListener('resize', updateLeaderLine);
+
+            // --- 2. 核心拖拽机制 (兼容鼠标与移动端触摸) ---
+            function makeDraggable(element, onDragCallback) {
+                let isDragging = false;
+                let startX, startY;
+                let elemLeft, elemTop;
+
+                // 鼠标事件
+                element.addEventListener('mousedown', dragStart);
+                window.addEventListener('mousemove', dragMove);
+                window.addEventListener('mouseup', dragEnd);
+
+                // 触摸事件
+                element.addEventListener('touchstart', dragStart, { passive: false });
+                window.addEventListener('touchmove', dragMove, { passive: false });
+                window.addEventListener('touchend', dragEnd);
+
+                function dragStart(e) {
+                    // 屏蔽点击文字区域的拖拽，使卡片内文字容易编辑
+                    if (e.target.hasAttribute('contenteditable')) return;
+
+                    isDragging = true;
+                    const clientX = e.type.startsWith('touch') ? e.touches[0].clientX : e.clientX;
+                    const clientY = e.type.startsWith('touch') ? e.touches[0].clientY : e.clientY;
+
+                    startX = clientX;
+                    startY = clientY;
+
+                    // 读取当前样式的百分比位置
+                    const rect = element.getBoundingClientRect();
+                    const containerRect = container.getBoundingClientRect();
+
+                    elemLeft = rect.left - containerRect.left;
+                    elemTop = rect.top - containerRect.top;
+
+                    // 如果是圆圈，因为有 transform: translate(-50%, -50%)，需要对其进行修正
+                    if (element.id === 'drag-ring') {
+                        elemLeft += rect.width / 2;
+                        elemTop += rect.height / 2;
+                    }
+
+                    if (e.type.startsWith('touch')) e.preventDefault();
+                }
+
+                function dragMove(e) {
+                    if (!isDragging) return;
+
+                    const clientX = e.type.startsWith('touch') ? e.touches[0].clientX : e.clientX;
+                    const clientY = e.type.startsWith('touch') ? e.touches[0].clientY : e.clientY;
+
+                    const deltaX = clientX - startX;
+                    const deltaY = clientY - startY;
+
+                    const containerRect = container.getBoundingClientRect();
+
+                    // 计算拖拽后的新像素位置
+                    let newLeft = elemLeft + deltaX;
+                    let newTop = elemTop + deltaY;
+
+                    // 边缘围栏：防止拖出分析区外
+                    const offset = 20;
+                    newLeft = Math.max(offset, Math.min(containerRect.width - offset, newLeft));
+                    newTop = Math.max(offset, Math.min(containerRect.height - offset, newTop));
+
+                    // 转换为灵活的百分比定位，防止屏幕缩放时错位
+                    const pctLeft = (newLeft / containerRect.width) * 100;
+                    const pctTop = (newTop / containerRect.height) * 100;
+
+                    element.style.left = `${pctLeft.toFixed(2)}%`;
+                    element.style.top = `${pctTop.toFixed(2)}%`;
+
+                    onDragCallback();
+                }
+
+                function dragEnd() {
+                    if (isDragging) {
+                        isDragging = false;
+                        saveStatus('saving');
+                        // 结束拖动后保存位置坐标
+                        localStorage.setItem(`${element.id}-left`, element.style.left);
+                        localStorage.setItem(`${element.id}-top`, element.style.top);
+                        setTimeout(() => saveStatus('saved'), 600);
+                    }
+                }
+            }
+
+            // 初始化两个组件的拖动事件
+            makeDraggable(ring, updateLeaderLine);
+            makeDraggable(card, updateLeaderLine);
+
+            // --- 3. 自动同步保存系统 ---
+            // 状态指示器辅助函数
+            function saveStatus(state) {
+                if (state === 'saving') {
+                    saveStatusText.innerHTML = "状态: 同步保存至本地中...";
+                    saveStatusText.classList.remove('text-slate-400', 'text-emerald-400');
+                    saveStatusText.classList.add('text-amber-400');
+                } else if (state === 'saved') {
+                    saveStatusText.innerHTML = "状态: 所有修改已实时保存在本地";
+                    saveStatusText.classList.remove('text-amber-400', 'text-slate-400');
+                    saveStatusText.classList.add('text-emerald-400');
+                }
+            }
+
+            // 文本编辑自动保存逻辑 (利用 input 事件进行防抖监听)
+            let debounceTimer;
+            document.querySelectorAll('[data-save-key]').forEach(elem => {
+                elem.addEventListener('input', () => {
+                    saveStatus('saving');
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(() => {
+                        const key = elem.getAttribute('data-save-key');
+                        localStorage.setItem(`slide-text-${key}`, elem.innerHTML);
+                        saveStatus('saved');
+                    }, 500); // 停止打字 500 毫秒后自动保存
+                });
+            });
+
+            // 载入已有历史数据
+            function loadSavedState() {
+                // 加载保存的文字
+                document.querySelectorAll('[data-save-key]').forEach(elem => {
+                    const key = elem.getAttribute('data-save-key');
+                    const savedVal = localStorage.getItem(`slide-text-${key}`);
+                    if (savedVal !== null) {
+                        elem.innerHTML = savedVal;
+                    }
+                });
+
+                // 加载拖动的坐标
+                const ringLeft = localStorage.getItem('drag-ring-left');
+                const ringTop = localStorage.getItem('drag-ring-top');
+                if (ringLeft && ringTop) {
+                    ring.style.left = ringLeft;
+                    ring.style.top = ringTop;
+                }
+
+                const cardLeft = localStorage.getItem('drag-card-left');
+                const cardTop = localStorage.getItem('drag-card-top');
+                if (cardLeft && cardTop) {
+                    card.style.left = cardLeft;
+                    card.style.top = cardTop;
+                }
+
+                // 页面初始化重新渲染折线
+                setTimeout(updateLeaderLine, 100);
+            }
+
+            // 一键复位默认设置
+            document.getElementById('reset-btn').addEventListener('click', () => {
+                if(confirm('确认要清除所有自定义修改并恢复至出厂模板吗？')) {
+                    localStorage.clear();
+                    // 刷新页面重置所有内容
+                    window.location.reload();
+                }
+            });
+
+            // 初始化运行
+            loadSavedState();
+        });
+    </script>
+</body>
+</html>
