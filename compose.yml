@@ -17,6 +17,22 @@ services:
     environment:
       - TZ=Asia/Shanghai
     volumes:
-      - ./data:/AstrBot/data
+      - ..:/App
       # - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: astrbot-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: astrbot
+      POSTGRES_PASSWORD: astrbot123
+      POSTGRES_DB: astrbot
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
