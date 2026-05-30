@@ -1,0 +1,40 @@
+{
+  "name": "AstrBot Dev",
+  "dockerComposeFile": ["../compose.yml", "docker-compose.yml"],
+  "service": "astrbot",
+  "workspaceFolder": "/App/AstrBot",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.debugpy",
+        "ms-python.vscode-pylance",
+        "charliermarsh.ruff",
+        "tamasfe.even-better-toml",
+        "ms-azuretools.vscode-docker",
+        "donjayamanne.githistory"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/App/AstrBot/.venv/bin/python",
+        "python.terminal.activateEnvironment": false,
+        "[python]": {
+          "editor.formatOnSave": true,
+          "editor.defaultFormatter": "charliermarsh.ruff",
+          "editor.codeActionsOnSave": {
+            "source.organizeImports": "explicit"
+          }
+        }
+      }
+    }
+  },
+  "forwardPorts": [6185, 6199],
+  "portsAttributes": {
+    "6185": { "label": "AstrBot WebUI" },
+    "6199": { "label": "OneBot v11 WebSocket" }
+  },
+  "postCreateCommand": [
+    "python -m pip install uv",
+    "uv pip install -r requirements.txt --no-cache-dir --system",
+    "uv pip install socksio pilk --no-cache-dir --system"
+]
+}

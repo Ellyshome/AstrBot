@@ -29,10 +29,6 @@ RUN if [ -n "$HTTP_PROXY" ]; then \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-RUN python -m pip install uv \
-    && uv pip install -r requirements.txt --no-cache-dir --system \
-    && uv pip install socksio uv pilk --no-cache-dir --system
-
 EXPOSE 6185
-CMD ["tail", "-f", "/dev/null"]
+# CMD ["tail", "-f", "/dev/null"]
 # CMD ["python", "main.py"]
