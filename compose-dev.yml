@@ -9,6 +9,15 @@ services:
     # image: soulter/astrbot:latest
     container_name: astrbot
     restart: always
+    command: >
+      sh -c "
+        # 安装npm
+        apt update && apt install -y npm &&
+        # 这里可以添加其他需要自动执行的命令
+        # cd /App/dashboard && npm install &&
+        # 最后保留tail命令保持容器运行
+        tail -f /dev/null
+      "
     security_opt:
       - no-new-privileges:true
     ports:
