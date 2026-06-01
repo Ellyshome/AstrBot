@@ -40,6 +40,7 @@ def stream_graph_updates(user_input: str):
             print("Assistant:", value["messages"][-1].content)
 
 
+print(graph.get_graph().draw_mermaid())
 while True:
     try:
         user_input = input("User: ")
